@@ -1,0 +1,247 @@
+-- RedZ Hub v2.0 - اسکریپت کامل بلاکس فروت ۲۰۲۵ (PC و موبایل)
+-- لودسترینگ برای Delta Executor - تمام قابلیت‌ها، شناور، توسط آقای احمدی
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zxciaz/Orca/main/source"))()
+local Window = Library:CreateWindow({
+    Name = "ردز هاب | بلاکس فروت - توسط آقای احمدی",
+    LoadingTitle = "در حال بارگذاری ردز هاب...",
+    LoadingSubtitle = "توسط آقای احمدی",
+    ConfigurationSaving = {Enabled = true, FolderName = "RedZHub", FileName = "BloxFruitsConfig"}
+})
+
+-- خدمات
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
+local LocalPlayer = Players.LocalPlayer
+
+-- دور زدن ضدچیت (هوک قوی برای عمومی و خصوصی)
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if method == "FireServer" and self:IsA("RemoteEvent") then
+        local name = string.lower(tostring(self))
+        if name:find("anti") or name:find("tele") or name:find("cheat") or name:find("byfron") or name:find("speed") then
+            return
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+setreadonly(mt, true)
+
+-- تب اصلی
+local MainTab = Window:CreateTab("اصلی", "rbxassetid://4483345998")
+
+-- سوئیچ مزرعه خودکار
+local AutoFarmToggle = MainTab:CreateToggle({
+    Name = "مزرعه خودکار (XP و میوه‌ها)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoFarm = Value
+        spawn(function()
+            while AutoFarmToggle.Value do
+                pcall(function()
+                    for _, v in pairs(workspace.Enemies:GetChildren()) do
+                        if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                            game:GetService("VirtualUser"):ClickButton1(Vector2.new())
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetSpawnPoint")
+                        end
+                    end
+                    if LocalPlayer.Character.Humanoid.Health < 20 then
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 1000, 0)
+                    end
+                end)
+                wait(0.5)
+            end
+        end)
+    end
+})
+
+-- سوئیچ مهارت خودکار
+local AutoMasteryToggle = MainTab:CreateToggle({
+    Name = "مهارت خودکار",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoMastery = Value
+        spawn(function()
+            while AutoMasteryToggle.Value do
+                pcall(function()
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyFruit", "Dragon")
+                    for _, v in pairs(workspace.Enemies:GetChildren()) do
+                        if v.Name == "Level " .. LocalPlayer.Data.Level.Value then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                            game:GetService("VirtualUser"):ClickButton1(Vector2.new())
+                        end
+                    end
+                end)
+                wait(1)
+            end
+        end)
+    end
+})
+
+-- سوئیچ رید خودکار
+local AutoRaidToggle = MainTab:CreateToggle({
+    Name = "رید خودکار",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoRaid = Value
+        spawn(function()
+            while AutoRaidToggle.Value do
+                pcall(function()
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", "Flame")
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("StartRaid")
+                    wait(10)
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v.Name == "RaidBoss" then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
+                            game:GetService("VirtualUser"):ClickButton1(Vector2.new())
+                        end
+                    end
+                end)
+                wait(2)
+            end
+        end)
+    end
+})
+
+-- تب تلپورت
+local TeleportTab = Window:CreateTab("تلپورت", "rbxassetid://4483345998")
+
+local TeleportButton = TeleportTab:CreateButton({
+    Name = "تلپورت به فورت مارین",
+    Callback = function()
+        pcall(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2880, 43, 5566)
+        end)
+    end
+})
+
+local FruitSniperToggle = TeleportTab:CreateToggle({
+    Name = "شکار میوه (جمع‌آوری خودکار افسانه‌ای)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().FruitSniper = Value
+        spawn(function()
+            while FruitSniperToggle.Value do
+                pcall(function()
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v:IsA("Tool") and string.find(v.Name, "Dragon") then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.Handle.CFrame
+                            fireclickdetector(v.Handle.ClickDetector)
+                        end
+                    end
+                end)
+                wait(0.1)
+            end
+        end)
+    end
+})
+
+-- تب مبارزه
+local CombatTab = Window:CreateTab("مبارزه", "rbxassetid://4483345998")
+
+local AutoInstinctToggle = CombatTab:CreateToggle({
+    Name = "اینستینکت خودکار V2",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoInstinct = Value
+        spawn(function()
+            while AutoInstinctToggle.Value do
+                pcall(function()
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyObservation", true)
+                end)
+                wait(5)
+            end
+        end)
+    end
+})
+
+-- تب متفرقه
+local MiscTab = Window:CreateTab("متفرقه", "rbxassetid://4483345998")
+
+local SpeedSlider = MiscTab:CreateSlider({
+    Name = "سرعت حرکت",
+    Min = 16,
+    Max = 200,
+    Default = 16,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    Callback = function(Value)
+        LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end
+})
+
+local NotifierToggle = MiscTab:CreateToggle({
+    Name = "نوتیفیکیشن میوه",
+    Default = true,
+    Callback = function(Value)
+        getgenv().Notifier = Value
+        if Value then
+            workspace.ChildAdded:Connect(function(child)
+                if child:IsA("Tool") and Notifier then
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "ردز هاب - آقای احمدی";
+                        Text = "میوه افسانه‌ای ظاهر شد: " .. child.Name;
+                        Duration = 5;
+                    })
+                end
+            end)
+        end
+    end
+})
+
+local ChestFarmToggle = MiscTab:CreateToggle({
+    Name = "مزرعه خودکار سینه‌ها",
+    Default = false,
+    Callback = function(Value)
+        getgenv().ChestFarm = Value
+        spawn(function()
+            while ChestFarmToggle.Value do
+                pcall(function()
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v.Name == "Chest" then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
+                            fireclickdetector(v.ClickDetector)
+                        end
+                    end
+                end)
+                wait(1)
+            end
+        end)
+    end
+})
+
+-- تب اضافی: Auto Awaken
+local AwakenTab = Window:CreateTab("بیداری", "rbxassetid://4483345998")
+
+local AutoAwakenToggle = AwakenTab:CreateToggle({
+    Name = "بیداری خودکار میوه",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoAwaken = Value
+        spawn(function()
+            while AutoAwakenToggle.Value do
+                pcall(function()
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("Awakening", "Check")
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("Awakening", "Awaken")
+                end)
+                wait(2)
+            end
+        end)
+    end
+})
+
+-- تنظیمات موبایل و شناور
+Window:SetDraggable(true) -- شناور بودن
+Window:SetSize(400, 500) -- اندازه مناسب برای موبایل و PC
+Window:SetPosition(UDim2.new(0.5, -200, 0.5, -250)) -- مرکز صفحه
+
+Library:Init()
+
+print("ردز هاب بارگذاری شد! توسط آقای احمدی - برای PC و موبایل فعاله.")
